@@ -17,14 +17,16 @@ class Router {
         $requestMethod = $_SERVER['REQUEST_METHOD'];
 
         // Hilangkan nama folder proyek dari URL
-        $scriptDir = str_replace('/public', '', dirname($_SERVER['SCRIPT_NAME']));
-        $requestPath = '/' . trim(str_replace($scriptDir, '', $requestUri), '/');
+        $scriptName = $_SERVER['SCRIPT_NAME']; // contoh: /api-php-native-seni/public/index.php
+        $baseDir = str_replace('/index.php', '', $scriptName); // hasil: /api-php-native-seni/public
+        $requestPath = str_replace($baseDir, '', $requestUri); // hapus prefix
+        $requestPath = '/' . trim($requestPath, '/'); // pastikan format /api/v1/users
 
         foreach ($this->routes as $route) {
             $pattern = "@^" . preg_replace('/\{([\w]+)\}/', '(?P<\1>[\w-]+)', trim($route['path'], '/')) . "$@";
             if ($requestMethod === $route['method'] && preg_match($pattern, trim($requestPath, '/'), $matches)) {
                 $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
-                echo json_encode(call_user_func_array($route['handler'], $params));
+                call_user_func_array($route['handler'], $params);
                 return;
             }
         }
